@@ -1,0 +1,11 @@
+D:\Programs\Visual Projects\AStar\AStar\obj\Debug\netcoreapp2.0\AStar.csprojAssemblyReference.cache
+D:\Programs\Visual Projects\AStar\AStar\obj\Debug\netcoreapp2.0\AStar.csproj.CoreCompileInputs.cache
+D:\Programs\Visual Projects\AStar\AStar\obj\Debug\netcoreapp2.0\AStar.AssemblyInfoInputs.cache
+D:\Programs\Visual Projects\AStar\AStar\obj\Debug\netcoreapp2.0\AStar.AssemblyInfo.cs
+D:\Programs\Visual Projects\AStar\AStar\bin\Debug\netcoreapp2.0\AStar.deps.json
+D:\Programs\Visual Projects\AStar\AStar\bin\Debug\netcoreapp2.0\AStar.runtimeconfig.json
+D:\Programs\Visual Projects\AStar\AStar\bin\Debug\netcoreapp2.0\AStar.runtimeconfig.dev.json
+D:\Programs\Visual Projects\AStar\AStar\bin\Debug\netcoreapp2.0\AStar.dll
+D:\Programs\Visual Projects\AStar\AStar\bin\Debug\netcoreapp2.0\AStar.pdb
+D:\Programs\Visual Projects\AStar\AStar\obj\Debug\netcoreapp2.0\AStar.dll
+D:\Programs\Visual Projects\AStar\AStar\obj\Debug\netcoreapp2.0\AStar.pdb
