@@ -19,6 +19,8 @@ namespace WannaBeSnake
             public int f;
             public int x;
             public int y;
+            public int xfather;
+            public int yfather;
             public Node(int xNode, int yNode, int heuristic, int realDistance)
             {
                 h = heuristic;
@@ -26,10 +28,21 @@ namespace WannaBeSnake
                 f = g + h;
                 x = xNode;
                 y = yNode;
+                xfather = 0;
+                yfather = 0;
             }
             public void IncreaseG()
             {
                 g += 10;
+            }
+            public void SetFather(int xF,int yF)
+            {
+                xfather = xF;
+                yfather = yF;
+            }
+            public void UpdateDistance()
+            {
+                f = g + h;
             }
         }
         //Manhattan Distance
@@ -37,17 +50,21 @@ namespace WannaBeSnake
         {
             return (Math.Abs(x2 - x1) + Math.Abs(y2 - y1)) * 10;
         }
-        static public void AStar(int x1, int y1, int x2, int y2,List<Position> path)
+        static public void AStar(int x1, int y1, int x2, int y2,List<Position> path,List<Position> bodyPositions)
         {
             path.Clear();
             int[,] map = new int[30, 150];
+            
             List<Node> open = new List<Node>();
             List<Node> closed = new List<Node>();
             Node node1 = new Node(x1 + 1, y1, Manhattan(x1 + 1, y1, x2, y2), 0);
             Node node2 = new Node(x1, y1 + 1, Manhattan(x1, y1 + 1, x2, y2), 0);
             Node node3 = new Node(x1 - 1, y1, Manhattan(x1 - 1, y1, x2, y2), 0);
             Node node4 = new Node(x1, y1 - 1, Manhattan(x1, y1 - 1, x2, y2), 0);
-
+            foreach(Position bodyPart in bodyPositions)
+            {
+                map[bodyPart.Y, bodyPart.X] = -1;
+            }
             open.Add(node1);
             open.Add(node2);
             open.Add(node3);
@@ -58,17 +75,28 @@ namespace WannaBeSnake
           
             while (!solutionFound)
             {
+                if (open.Count==0)
+                {
+                    break;
+                }
                 open = open.OrderBy(Node => Node.f).ToList();
+
                 closed.Add(open[0]);
                 if (open[0].x == x2 && open[0].y == y2)
                 {
                     solutionFound = true;
                     break;
                 }
-                node1 = new Node(open[0].x + 1, open[0].y, Manhattan(open[0].x + 1, open[0].y, x2, y2), 0);
-                node2 = new Node(open[0].x, open[0].y + 1, Manhattan(open[0].x + 1, open[0].y + 1, x2, y2), 0);
-                node3 = new Node(open[0].x - 1, open[0].y, Manhattan(open[0].x - 1, open[0].y, x2, y2), 0);
-                node4 = new Node(open[0].x, open[0].y - 1, Manhattan(open[0].x, open[0].y - 1, x2, y2), 0);
+
+                node1 = new Node(open[0].x + 1, open[0].y, Manhattan(open[0].x + 1, open[0].y, x2, y2), open[0].g);
+                node2 = new Node(open[0].x, open[0].y + 1, Manhattan(open[0].x + 1, open[0].y + 1, x2, y2), open[0].g);
+                node3 = new Node(open[0].x - 1, open[0].y, Manhattan(open[0].x - 1, open[0].y, x2, y2), open[0].g);
+                node4 = new Node(open[0].x, open[0].y - 1, Manhattan(open[0].x, open[0].y - 1, x2, y2), open[0].g);
+                node1.SetFather(open[0].x, open[0].y);
+                node2.SetFather(open[0].x, open[0].y);
+                node3.SetFather(open[0].x, open[0].y);
+                node4.SetFather(open[0].x, open[0].y);
+
                 List<Node> nodesToAdd = new List<Node>();
                 List<Node> nodesToRemove = new List<Node>();
 
@@ -82,8 +110,8 @@ namespace WannaBeSnake
                     {
                         if (open[i].x == nodesToAdd[j].x && open[i].y == nodesToAdd[j].y)
                         {
-                            open[i].IncreaseG();
-                            nodesToRemove.Add(nodesToAdd[j]);
+                                //open[i].IncreaseG();
+                                nodesToRemove.Add(nodesToAdd[j]);
                         }
                     }
                 }
@@ -92,7 +120,7 @@ namespace WannaBeSnake
                 {
                     foreach (Node nodes in closed)
                     {
-                        if (node.x == nodes.x && node.y == nodes.y)
+                        if ((node.x == nodes.x && node.y == nodes.y)||node.x<=-1||node.y<=-1||node.y>=30||node.x>=150||map[node.y,node.x]==-1)
                         {
                             nodesToRemove.Add(node);
                             continue;
@@ -105,14 +133,28 @@ namespace WannaBeSnake
                 }
                 foreach (Node node in nodesToAdd)
                 {
+                    if(map[node.y, node.x] != -1)
                     open.Add(node);
                 }
                 open.Remove(open[0]);
             }
-            foreach (Node node in closed)
+            /*foreach (Node node in closed)
             {
                 path.Add(new Position(node.x, node.y));
+            }*/
+            Node auxNode = closed.Last();
+            path.Add(new Position(auxNode.x, auxNode.y));
+            while (true)
+            {
+                if(auxNode.xfather==0&&auxNode.yfather==0)
+                {
+                    path.Add(new Position(auxNode.x, auxNode.y));
+                    break;
+                }
+                path.Add(new Position(auxNode.xfather,auxNode.yfather));
+                auxNode = closed.Find(x => x.x == path.Last().X && x.y == path.Last().Y);
             }
+            path.Reverse();
         }
         public struct Position
         {
@@ -144,12 +186,14 @@ namespace WannaBeSnake
             {
                 Console.SetCursorPosition(X, Y);
                 Console.BackgroundColor = ConsoleColor.Black;
-                Console.Write("@");
+                Console.Write("*");
             }
         }
 
         public struct Snake
         {
+            public int highscore;
+
             public int X, Y, dX, dY, bodyLen, steps, appleX, appleY;
             public List<Position> bodyPositions;
             public List<Position> smartPath;
@@ -157,6 +201,7 @@ namespace WannaBeSnake
 
             public Snake(int x, int y)
             {
+                highscore = 0;
                 X = x;
                 Y = y;
                 dX = 1;
@@ -272,15 +317,38 @@ namespace WannaBeSnake
                         dY = -1;
                         dX = 0;
                     }*/
-                    X = smartPath[steps].X;
-                    Y = smartPath[steps].Y;
-                    if (smartPath[steps].X==appleX&&smartPath[steps].Y==appleY)
+                    /*foreach(Position pos in bodyPositions)
                     {
+                        if(pos.X==smartPath[0].X&&pos.Y==smartPath[0].Y)
+                        {
+                            drawSnake();
+                        }
+                    }
+                    X = smartPath[0].X;
+                    Y = smartPath[0].Y;*/
+                    if (steps >= smartPath.Count)
+                    {
+                        if(bodyLen>highscore)
+                        {
+                            highscore = bodyLen;
+                        }
+                        
+                        Thread.Sleep(10000);
+                        
+                        loseMessage();
+                        AStar(X, Y, appleX, appleY, smartPath, bodyPositions);
                         steps = 0;
                     }
-                    
-                    
-                    steps++;
+                    else
+                    {
+                        X = smartPath[steps].X;
+                        Y = smartPath[steps].Y;
+                        if (smartPath[steps].X == appleX && smartPath[steps].Y == appleY)
+                        {
+                            steps = 0;
+                        }
+                        steps++;
+                    }
                 }
                 else
                 {
@@ -320,7 +388,7 @@ namespace WannaBeSnake
                     {
                         Console.SetCursorPosition(X, Y);
                         Console.BackgroundColor = ConsoleColor.White;
-                        Console.Write("*");
+                        Console.Write(" ");
                         bodyPositions.Add(new Position(X, Y));
                         X++;
                     }
@@ -334,7 +402,7 @@ namespace WannaBeSnake
                     bodyPositions.RemoveAt(0);
                     Console.SetCursorPosition(X, Y);
                     Console.BackgroundColor = ConsoleColor.White;
-                    Console.Write("*");
+                    Console.Write(" ");
                     bodyPositions.Add(new Position(X, Y));
                     if (grow)
                     {
@@ -360,16 +428,17 @@ namespace WannaBeSnake
 
         static void Main(string[] args)
         {
-
             Random rnd = new Random();
             Manzanita myApple = new Manzanita(20, 20);
             Console.CursorVisible = false;
             Console.SetWindowSize(150, 30);
-            Snake mySnake = new Snake(10, 10);
-            mySnake.isSmart = true;
-            mySnake.appleX = myApple.X;
-            mySnake.appleY = myApple.Y;
-            AStar(mySnake.X, mySnake.Y, mySnake.appleX, mySnake.appleY, mySnake.smartPath);
+            Snake mySnake = new Snake(10, 10)
+            {
+                isSmart = true,
+                appleX = myApple.X,
+                appleY = myApple.Y
+            };
+            AStar(mySnake.X, mySnake.Y, mySnake.appleX, mySnake.appleY, mySnake.smartPath,mySnake.bodyPositions);
 
             var keyPressEvent = Task.Run(() => mySnake.redirect(Console.ReadKey(true).Key));
             ConsoleKey mykey = new ConsoleKey();
@@ -378,18 +447,29 @@ namespace WannaBeSnake
             while (true)
             {
                 Console.SetCursorPosition(1, 0);
-                Console.Write("MANZANITAS COMIDAS -> " + (mySnake.bodyLen - 1));
-                Thread.Sleep(50);
+                Console.Title="MANZANITAS COMIDAS: " + (mySnake.bodyLen - 1)+"| HighScore:"+mySnake.highscore;
+                //Thread.Sleep(1);
                 if (mySnake.X == myApple.X && mySnake.Y == myApple.Y)
                 {
-                    Console.Beep(200, 200);
+                    //Console.Beep(200, 200);
                     mySnake.growUp();
                     myApple.Respawn();
+                    CheckApple:
+                    foreach(Position pos in mySnake.bodyPositions)
+                    {
+                        if(myApple.X==pos.X&&myApple.Y==pos.Y)
+                        {
+                            
+                            myApple.Respawn();
+                            goto CheckApple;
+                        }
+                    }
                     mySnake.appleX = myApple.X;
                     mySnake.appleY = myApple.Y;
                     mySnake.newGoal = true;
-                    AStar(mySnake.X, mySnake.Y, myApple.X,myApple.Y, mySnake.smartPath);
+                    AStar(mySnake.X, mySnake.Y, myApple.X, myApple.Y, mySnake.smartPath, mySnake.bodyPositions);
                 }
+                //AStar(mySnake.X, mySnake.Y, myApple.X, myApple.Y, mySnake.smartPath, mySnake.bodyPositions);
                 mySnake.moveSnake();
                 myApple.Draw();
                 if (keyPressEvent.IsCompleted) keyPressEvent = Task.Run(() => mySnake.redirect(Console.ReadKey(true).Key));
